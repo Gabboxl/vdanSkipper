@@ -1,0 +1,39 @@
+{
+  "name": "vdanSkipper",
+  "version": "1.0.0",
+  "manifest_version": 2,
+  "description": "vdanSkipper",
+  "icons": {
+    "16": "src/icons/nasapod16x16.png",
+    "32": "src/icons/nasapod32x32.png",
+    "48": "src/icons/nasapod48x48.png",
+    "128": "src/icons/nasapod128x128.png"
+  },
+  "browser_action": {
+    "default_popup": "index.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://vialedaniele.it/formazione/appLms/*"
+      ],
+      "js": ["src/lib/jquery.min.js","src/content-scripts/contentscript.ts"]
+    }
+  ],
+  "permissions": [
+    "webNavigation",
+    "tabs",
+    "background",
+    "webRequest",
+    "webRequestBlocking",
+    "https://vialedaniele.it/formazione/appLms/*"
+  ],
+  "background": {
+    "scripts": ["src/backgroundscripts/background.ts"],
+    "persistent": true
+  },
+  "web_accessible_resources": [
+    "images/*.jpeg"
+  ],
+  "content_security_policy": "script-src 'self' https://vialedaniele.it; object-src 'self'"
+}
