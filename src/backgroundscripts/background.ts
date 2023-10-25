@@ -6,8 +6,10 @@ import * as convert from 'xml-js';
 chrome.runtime.onInstalled.addListener(() => {
     //save headers in a variable in onbeforeheader
 
+    //headers salvati da richiesta precedentemente bloccata
     let headersx: [string, string][] = [];
 
+    //signature salvata da richiesta precedentemente bloccata
     let signature: string | undefined = ""; 
 
     chrome.webRequest.onBeforeSendHeaders.addListener(
@@ -36,6 +38,7 @@ chrome.runtime.onInstalled.addListener(() => {
 
                 });
 
+                //senza l'header x-signature il sito vdan manda in logout
                 newHeaders.push({ name: "X-Signature", value: signature || "" });
 
                 return { requestHeaders: newHeaders };
@@ -43,7 +46,7 @@ chrome.runtime.onInstalled.addListener(() => {
             return { requestHeaders: details.requestHeaders };
         },
         { urls: ["<all_urls>"] },
-        ["requestHeaders", "blocking"] // add "blocking" to modify headers
+        ["requestHeaders", "blocking"]
     );
 
 
@@ -57,8 +60,7 @@ chrome.runtime.onInstalled.addListener(() => {
                 ) &&
                 details.requestBody?.raw?.length
             ) {
-                // Use this to decode the body of your post
-                console.log("GABBANA");
+                console.log("aka");
                 const bytes = new Uint8Array(details.requestBody.raw[0].bytes || []);
                 const postedString = decodeURIComponent(
                     String.fromCharCode(...bytes)
@@ -69,10 +71,12 @@ chrome.runtime.onInstalled.addListener(() => {
 
                 const jsonObject = JSON.parse(result);
 
+                //if the lesson status is already completed then don't do anything and let the request pass
                 if(jsonObject["trackobj"]["cmi"]["core"]["lesson_status"]["_text"] == "completed"){
                     return { cancel: false };
                 }
 
+                //change the lesson status to completed and the score to 100
                 jsonObject["trackobj"]["cmi"]["core"]["lesson_status"]["_text"] =
                     "completed";
                 jsonObject["trackobj"]["cmi"]["core"]["score"]["raw"] = "100";
@@ -89,7 +93,7 @@ chrome.runtime.onInstalled.addListener(() => {
                 }
 
 
-                //get cookies from current tab
+                //in realtà non funziona perchè viene bloccato da chrome l'aggiunta dei cookie
                 chrome.cookies.getAll({ url: details.url }, function (cookies) {
                     console.log("COOKIES: ", cookies);
                     let cookieString = "";
@@ -104,26 +108,10 @@ chrome.runtime.onInstalled.addListener(() => {
                     headersx.forEach(header => xhr.setRequestHeader(header[0], header[1]));
                     xhr.send(newBytes);
                 });
-                //make a new fetch request with the new body and the same headers
-                // fetch(details.url, {
-                //     mode: "no-cors",
-                //     method: "POST",
-                //     headers: headersx,
-                //     body: newBytes,
-                    
-                // });
 
 
                 //block the original request
                 return { cancel: true };
-
-                // Make a new request with the same URL, headers, and the newBytes as the body of the POST request
-                return {
-             //s       requestHeaders: details.requestHeaders,
-                    method: "POST",
-                    url: "https://gabbana.com",
-                    requestBody: { raw: [{ bytes: newBytes }] },
-                };
             }
         },
         { urls: ["<all_urls>"] },
